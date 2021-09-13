@@ -1,7 +1,7 @@
 import axios from "axios";
 import React from "react";
 import Movies from "./movies";
-import Weather from "./Weather";
+import Weather from "./weather";
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -11,49 +11,46 @@ class App extends React.Component {
       displayName: "",
       mapFlag: false,
       displayErr: false,
-      moviesArray: [],
-      displayMoviesErr:false,
-      movieFlag:false,
-      weatherFlag:false,
+      displayMoviesErr: false,
+      movieFlag: false,
+      weatherFlag: false,
+      weatherData: [],
     };
   }
-  getMoviesData = (async(cityName) => {
-    try{
-    let moviesresult = await axios.get(
-      `https://aseel-city.herokuapp.com/movies?query=${cityName}`
-    );
-    this.setState({ 
-      movieFlag:true,
-      moviesArray: moviesresult.data
-     });
-
-  }
-    catch{
-      this.setState({
-        displayMoviesErr:true,
-      })
-      
-    }
-  });
-
-  getWeatherData = async (lat, lon) => {
+  getMoviesData = async (cityName) => {
     try {
-      let result2 = await axios.get(
-        `https://aseel-city.herokuapp.com/weather?lat=${lat}&lon=${lon}`
+      let moviesresult = await axios.get(
+        `https://aseel-city.herokuapp.com/movies?query=${cityName}`
       );
-
+      console.log(moviesresult.data);
       this.setState({
-         weatherData: result2.data,
-         weatherFlag:true,
-         });
-
-      console.log(JSON.stringify(result2.data));
+        movieFlag: true,
+        moviesArray: moviesresult.data,
+      });
     } catch {
-      console.log("err22");
       this.setState({
-        displayErr: true,
+        displayMoviesErr: true,
       });
     }
+  };
+
+  getWeatherData = async (cityName, lat, lon) => {
+    // try {
+    let result2 = await axios.get(
+      `http://localhost:3300/weather?cityName=${cityName}&lat=${lat}&lon=${lon}`
+    );
+
+    this.setState({
+      weatherData: result2.data,
+      weatherFlag: true,
+    });
+
+    console.log(result2.data);
+    // } catch {
+    // console.log("err22");
+    // this.setState({
+    //   displayErr: true,
+    // });
   };
   getData = async (event) => {
     event.preventDefault();
@@ -69,7 +66,9 @@ class App extends React.Component {
         displayName: result.data[0].display_name,
         mapFlag: true,
       });
-      this.getWeatherData(this.state.lat, this.state.lon);
+      this.getWeatherData(cityName, this.state.lat, this.state.lon);
+      this.getMoviesData(cityName);
+
     } catch {
       console.log("err");
       this.setState({
@@ -102,9 +101,10 @@ class App extends React.Component {
         {this.state.displayErr && <p>Sorry Error</p>}
         <h1>Movies</h1>
         {this.state.displayMoviesErr && <h2>Error</h2>}
-        {this.state.movieFlag && <Movies moviesArray={this.state.moviesArray} /> }
-
-        
+        {this.state.movieFlag && this.state.moviesArray.map(function (w, i) {
+            return <Movies moviesArray={w} />;
+          })
+          }
       </>
     );
   }
